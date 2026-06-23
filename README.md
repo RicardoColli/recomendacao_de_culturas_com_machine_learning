@@ -1,6 +1,6 @@
 # Recomendação de Culturas com Machine Learning
 
-Projeto desenvolvido para a disciplina de Mineração de Dados.
+Projeto desenvolvido para a disciplina de IA para Mineração de Dados.
 
 ## Objetivo
 
