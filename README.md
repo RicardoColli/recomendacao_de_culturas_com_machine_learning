@@ -154,8 +154,6 @@ Cultura recomendada: Rice
 recomendacao_de_culturas_com_machine_learning/
 
 ├── Crop_recommendation.csv
-├── comparacao_modelos.py
-├── importancia_random_forest.py
 ├── recomendador_cultura.py
 ├── requirements.txt
 ├── README.md
