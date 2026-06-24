@@ -244,13 +244,13 @@ def criar_tab_recomendacao(parent, modelo, encoder, valores_ideais, importancias
     input_frame.pack(fill="x", pady=(0, 16))
 
     campos = [
-        ("Nitrogênio (N)", "N"),
-        ("Fósforo (P)", "P"),
-        ("Potássio (K)", "K"),
-        ("Temperatura", "temperature"),
-        ("Umidade", "humidity"),
+        ("Nitrogênio (N, kg/ha)", "N"),
+        ("Fósforo (P, kg/ha)", "P"),
+        ("Potássio (K, kg/ha)", "K"),
+        ("Temperatura (°C)", "temperature"),
+        ("Umidade (%)", "humidity"),
         ("pH", "ph"),
-        ("Chuva", "rainfall"),
+        ("Chuva (mm)", "rainfall"),
     ]
 
     entradas = {}
@@ -288,13 +288,13 @@ def criar_tab_recomendacao(parent, modelo, encoder, valores_ideais, importancias
         """Gera explicação baseada na importância das variáveis e desvio do ideal."""
         valores_ideais_cultura = valores_ideais[cultura_top]
         nomes_campos = {
-            "N": "Nitrogênio",
-            "P": "Fósforo",
-            "K": "Potássio",
-            "temperature": "Temperatura",
-            "humidity": "Umidade",
+            "N": "Nitrogênio (kg/ha)",
+            "P": "Fósforo (kg/ha)",
+            "K": "Potássio (kg/ha)",
+            "temperature": "Temperatura (°C)",
+            "humidity": "Umidade (%)",
             "ph": "pH",
-            "rainfall": "Chuva"
+            "rainfall": "Chuva (mm)",
         }
         
         # Calcular impacto para cada campo
@@ -361,13 +361,13 @@ def criar_tab_recomendacao(parent, modelo, encoder, valores_ideais, importancias
             valores_ideais_cultura = valores_ideais[cultura_top]
             
             resultado_texto += f"\n📊 VALORES IDEAIS PARA {cultura_top.upper()}:\n"
-            resultado_texto += f"  • Nitrogênio: {valores_ideais_cultura['N']:.1f}\n"
-            resultado_texto += f"  • Fósforo: {valores_ideais_cultura['P']:.1f}\n"
-            resultado_texto += f"  • Potássio: {valores_ideais_cultura['K']:.1f}\n"
-            resultado_texto += f"  • Temperatura: {valores_ideais_cultura['temperature']:.1f}°C\n"
-            resultado_texto += f"  • Umidade: {valores_ideais_cultura['humidity']:.1f}%\n"
+            resultado_texto += f"  • Nitrogênio: {valores_ideais_cultura['N']:.1f} kg/ha\n"
+            resultado_texto += f"  • Fósforo: {valores_ideais_cultura['P']:.1f} kg/ha\n"
+            resultado_texto += f"  • Potássio: {valores_ideais_cultura['K']:.1f} kg/ha\n"
+            resultado_texto += f"  • Temperatura: {valores_ideais_cultura['temperature']:.1f} °C\n"
+            resultado_texto += f"  • Umidade: {valores_ideais_cultura['humidity']:.1f} %\n"
             resultado_texto += f"  • pH: {valores_ideais_cultura['ph']:.1f}\n"
-            resultado_texto += f"  • Chuva: {valores_ideais_cultura['rainfall']:.1f}mm\n"
+            resultado_texto += f"  • Chuva: {valores_ideais_cultura['rainfall']:.1f} mm\n"
             
             # Adicionar explicação
             resultado_texto += f"\n💡 POR QUÊ?\n"
