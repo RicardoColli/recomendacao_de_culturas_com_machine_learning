@@ -54,7 +54,7 @@ Foram analisados:
 
 ### Visualização dos Dados
 
-![Análise Exploratória](images/analise_exploratoria.png)
+![Análise Exploratória](images/print_analise_exploratoria.png)
 
 ---
 
@@ -82,7 +82,7 @@ Foram comparados os seguintes algoritmos de classificação:
 
 ### Gráfico de Comparação
 
-![Comparação dos Modelos](images/comparacao_modelos.png)
+![Comparação dos Modelos](images/print_modelos.png)
 
 ---
 
@@ -100,9 +100,9 @@ O modelo apresentou excelente capacidade de generalização e foi escolhido para
 
 ---
 
-## 🌾 Importância das Variáveis
+## 🌾 Importância dos Parâmetros
 
-A análise de importância das variáveis mostrou quais atributos tiveram maior influência na decisão do modelo.
+A análise de importância dos parâmetros mostrou quais atributos tiveram maior influência na decisão do modelo.
 
 Principais fatores:
 
@@ -114,7 +114,7 @@ Principais fatores:
 
 ### Gráfico de Importância
 
-![Importância das Variáveis](images/importancia_variaveis.png)
+![Importância das Variáveis](images/print_parametros.png)
 
 ---
 
@@ -144,7 +144,7 @@ Cultura recomendada: Rice
 
 ### Exemplo do Sistema
 
-![Resultado da Recomendação](images/resultado_recomendacao.png)
+![Resultado da Recomendação](images/print_recomendacao.png)
 
 ---
 
