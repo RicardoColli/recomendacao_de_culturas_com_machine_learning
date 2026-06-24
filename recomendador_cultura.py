@@ -69,13 +69,40 @@ def preparar_modelos(df):
     importances = rf_model.feature_importances_
     importance_pct = 100 * importances / importances.sum()
     importancia_df = pd.DataFrame({"feature": X.columns, "importance": importance_pct}).sort_values("importance", ascending=False)
+    
+    # Criar dicionário de importâncias por variável (escala 0-1)
+    importancias_por_variavel = dict(zip(X.columns, importances / importances.sum()))
+    
+    # Calcular valores ideais
+    valores_ideais = calcular_valores_ideais(df, encoder)
 
-    return encoder, modelos["Random Forest"], resultados, importancia_df, X
+    return encoder, modelos["Random Forest"], resultados, importancia_df, X, valores_ideais, importancias_por_variavel
 
 
 def prever_cultura(modelo, encoder, valores):
-    predicao = modelo.predict([valores])
-    return encoder.inverse_transform(predicao)[0]
+    """Retorna ranking das 3 culturas mais prováveis com suas probabilidades."""
+    probabilidades = modelo.predict_proba([valores])[0]
+    culturas = encoder.classes_
+    
+    # Criar ranking com culturas e probabilidades
+    ranking = list(zip(culturas, probabilidades))
+    ranking.sort(key=lambda x: x[1], reverse=True)
+    
+    # Retornar top 3
+    return ranking[:3]
+
+
+def calcular_valores_ideais(df, encoder):
+    """Calcula os valores ideais (média) para cada cultura baseado nos dados."""
+    X = df.drop("label", axis=1)
+    y = df["label"]
+    
+    valores_ideais = {}
+    for cultura in encoder.classes_:
+        mask = y == cultura
+        valores_ideais[cultura] = X[mask].mean().to_dict()
+    
+    return valores_ideais
 
 
 def validar_valores(entrada):
@@ -161,7 +188,7 @@ def criar_grafico_importancia(fig, importancia_df):
         ax.text(valor + 0.5, i, f"{valor:.1f}%", va="center")
 
 
-def criar_interface(df, modelo, encoder, resultados, importancia_df):
+def criar_interface(df, modelo, encoder, resultados, importancia_df, valores_ideais, importancias_por_variavel):
     root = tk.Tk()
     root.title("Recomendador de Culturas")
     root.geometry("920x680")
@@ -199,7 +226,7 @@ def criar_interface(df, modelo, encoder, resultados, importancia_df):
     notebook.add(tab_comparacao, text="Comparação de Modelos")
     notebook.add(tab_importancia, text="Importância dos Parâmetros")
 
-    criar_tab_recomendacao(tab_recomendacao, modelo, encoder)
+    criar_tab_recomendacao(tab_recomendacao, modelo, encoder, valores_ideais, importancias_por_variavel)
     criar_tab_eda(tab_eda, df)
     criar_tab_comparacao(tab_comparacao, resultados)
     criar_tab_importancia(tab_importancia, importancia_df)
@@ -207,9 +234,14 @@ def criar_interface(df, modelo, encoder, resultados, importancia_df):
     return root
 
 
-def criar_tab_recomendacao(parent, modelo, encoder):
-    card = ttk.Frame(parent, style="Card.TFrame", padding=20)
-    card.pack(fill="both", expand=True, padx=12, pady=12)
+def criar_tab_recomendacao(parent, modelo, encoder, valores_ideais, importancias_por_variavel):
+    # Frame principal com padding
+    main_frame = ttk.Frame(parent, style="Card.TFrame", padding=16)
+    main_frame.pack(fill="both", expand=True, padx=12, pady=12)
+
+    # ===== SEÇÃO DE INPUTS =====
+    input_frame = ttk.Frame(main_frame, style="Card.TFrame", padding=(12, 0))
+    input_frame.pack(fill="x", pady=(0, 16))
 
     campos = [
         ("Nitrogênio (N)", "N"),
@@ -222,15 +254,86 @@ def criar_tab_recomendacao(parent, modelo, encoder):
     ]
 
     entradas = {}
+    # Colocar campos em 2 colunas
     for idx, (rotulo, chave) in enumerate(campos):
-        ttk.Label(card, text=rotulo, style="Title.TLabel").grid(row=idx, column=0, sticky="w", pady=8)
-        var = tk.StringVar()
-        ttk.Entry(card, width=28, textvariable=var).grid(row=idx, column=1, sticky="ew", pady=8, padx=(12, 0))
-        entradas[chave] = var
-    card.columnconfigure(1, weight=1)
+        col = idx % 2
+        row = idx // 2
+        
+        # Coluna esquerda
+        if col == 0:
+            ttk.Label(input_frame, text=rotulo, style="Title.TLabel").grid(row=row, column=0, sticky="w", pady=6, padx=(0, 12))
+            var = tk.StringVar()
+            ttk.Entry(input_frame, width=18, textvariable=var).grid(row=row, column=1, sticky="ew", pady=6)
+            entradas[chave] = var
+        # Coluna direita
+        else:
+            ttk.Label(input_frame, text=rotulo, style="Title.TLabel").grid(row=row, column=2, sticky="w", pady=6, padx=(24, 12))
+            var = tk.StringVar()
+            ttk.Entry(input_frame, width=18, textvariable=var).grid(row=row, column=3, sticky="ew", pady=6)
+            entradas[chave] = var
+    
+    input_frame.columnconfigure(1, weight=1)
+    input_frame.columnconfigure(3, weight=1)
 
-    resultado_var = tk.StringVar(value="Insira os dados e clique em Recomendar.")
-    ttk.Label(card, textvariable=resultado_var, style="Result.TLabel", wraplength=520, justify="center").grid(row=len(campos), column=0, columnspan=2, pady=(20, 12))
+    # ===== SEÇÃO DE RESULTADO COM SCROLL =====
+    resultado_frame = ttk.Frame(main_frame, style="Card.TFrame")
+    resultado_frame.pack(fill="both", expand=True, pady=(0, 16))
+
+    scrolled = ScrolledText(resultado_frame, wrap="word", height=12, font=("Segoe UI", 10), background="#ffffff")
+    scrolled.pack(fill="both", expand=True)
+    scrolled.insert("1.0", "Insira os dados e clique em Recomendar.")
+    scrolled.configure(state="disabled")
+
+    def gerar_explicacao(cultura_top, valores_input):
+        """Gera explicação baseada na importância das variáveis e desvio do ideal."""
+        valores_ideais_cultura = valores_ideais[cultura_top]
+        nomes_campos = {
+            "N": "Nitrogênio",
+            "P": "Fósforo",
+            "K": "Potássio",
+            "temperature": "Temperatura",
+            "humidity": "Umidade",
+            "ph": "pH",
+            "rainfall": "Chuva"
+        }
+        
+        # Calcular impacto para cada campo
+        impactos = []
+        for chave, nome in nomes_campos.items():
+            valor_ideal = valores_ideais_cultura[chave]
+            valor_input = valores_input[chave]
+            
+            # Calcular desvio percentual em relação ao ideal
+            if valor_ideal != 0:
+                desvio_percentual = abs(valor_ideal - valor_input) / valor_ideal * 100
+            else:
+                desvio_percentual = abs(valor_ideal - valor_input) * 100
+            
+            # Importância da variável no modelo (valor entre 0 e 1)
+            importancia = importancias_por_variavel.get(chave, 0.01)
+            importancia_pct = importancia * 100
+            
+            # Score = desvio * importância (normalizado)
+            # Quanto maior o desvio E maior a importância, maior o impacto
+            score = desvio_percentual * importancia
+            
+            impactos.append((nome, valor_ideal, valor_input, desvio_percentual, importancia_pct, score))
+        
+        # Ordenar por MAIOR score de impacto
+        impactos.sort(key=lambda x: x[5], reverse=True)
+        
+        # Pegar os 3 maiores impactos
+        top_3 = impactos[:3]
+        
+        explicacao = f"As condições estão alinhadas aos valores ideais para {cultura_top}.\n"
+        explicacao += f"Fatores mais impactantes:\n"
+        
+        for idx, (nome, ideal, entrada, desvio, importancia, score) in enumerate(top_3, 1):
+            explicacao += f"\n{idx}. {nome}\n"
+            explicacao += f"   • Ideal: {ideal:.1f} | Sua entrada: {entrada:.1f}\n"
+            explicacao += f"   • Desvio: {desvio:.1f}% | Importância: {importancia:.1f}%"
+        
+        return explicacao
 
     def recomendar():
         try:
@@ -245,8 +348,35 @@ def criar_tab_recomendacao(parent, modelo, encoder):
                 valores["ph"],
                 valores["rainfall"],
             ]
-            cultura = prever_cultura(modelo, encoder, vetor)
-            resultado_var.set(f"🌱 Cultura recomendada: {cultura}")
+            ranking = prever_cultura(modelo, encoder, vetor)
+            
+            # Formatar resultado com ranking
+            resultado_texto = "🌱 RANKING DE CULTURAS RECOMENDADAS:\n\n"
+            for idx, (cultura, prob) in enumerate(ranking, 1):
+                percentual = prob * 100
+                resultado_texto += f"{idx}. {cultura.upper()} ({percentual:.1f}%)\n"
+            
+            # Adicionar valores ideais da cultura top
+            cultura_top = ranking[0][0]
+            valores_ideais_cultura = valores_ideais[cultura_top]
+            
+            resultado_texto += f"\n📊 VALORES IDEAIS PARA {cultura_top.upper()}:\n"
+            resultado_texto += f"  • Nitrogênio: {valores_ideais_cultura['N']:.1f}\n"
+            resultado_texto += f"  • Fósforo: {valores_ideais_cultura['P']:.1f}\n"
+            resultado_texto += f"  • Potássio: {valores_ideais_cultura['K']:.1f}\n"
+            resultado_texto += f"  • Temperatura: {valores_ideais_cultura['temperature']:.1f}°C\n"
+            resultado_texto += f"  • Umidade: {valores_ideais_cultura['humidity']:.1f}%\n"
+            resultado_texto += f"  • pH: {valores_ideais_cultura['ph']:.1f}\n"
+            resultado_texto += f"  • Chuva: {valores_ideais_cultura['rainfall']:.1f}mm\n"
+            
+            # Adicionar explicação
+            resultado_texto += f"\n💡 POR QUÊ?\n"
+            resultado_texto += gerar_explicacao(cultura_top, valores)
+            
+            scrolled.configure(state="normal")
+            scrolled.delete("1.0", tk.END)
+            scrolled.insert("1.0", resultado_texto)
+            scrolled.configure(state="disabled")
         except ValueError as erro:
             messagebox.showerror("Erro de validação", str(erro))
         except Exception as erro:
@@ -255,17 +385,21 @@ def criar_tab_recomendacao(parent, modelo, encoder):
     def limpar():
         for var in entradas.values():
             var.set("")
-        resultado_var.set("Insira os dados e clique em Recomendar.")
+        scrolled.configure(state="normal")
+        scrolled.delete("1.0", tk.END)
+        scrolled.insert("1.0", "Insira os dados e clique em Recomendar.")
+        scrolled.configure(state="disabled")
 
-    botoes = ttk.Frame(card, style="Card.TFrame")
-    botoes.grid(row=len(campos) + 1, column=0, columnspan=2, pady=(10, 0), sticky="ew")
-    botoes.columnconfigure(0, weight=1)
-    botoes.columnconfigure(1, weight=1)
+    # ===== SEÇÃO DE BOTÕES (sempre visível) =====
+    botoes_frame = ttk.Frame(main_frame, style="Card.TFrame")
+    botoes_frame.pack(fill="x")
+    botoes_frame.columnconfigure(0, weight=1)
+    botoes_frame.columnconfigure(1, weight=1)
 
-    ttk.Button(botoes, text="Recomendar", command=recomendar).grid(row=0, column=0, sticky="ew", padx=(0, 8))
-    ttk.Button(botoes, text="Limpar", command=limpar).grid(row=0, column=1, sticky="ew")
+    ttk.Button(botoes_frame, text="Recomendar", command=recomendar).grid(row=0, column=0, sticky="ew", padx=(0, 8), pady=8)
+    ttk.Button(botoes_frame, text="Limpar", command=limpar).grid(row=0, column=1, sticky="ew", pady=8)
 
-    ttk.Label(card, text="Modelo: Random Forest", style="Info.TLabel").grid(row=len(campos) + 2, column=0, columnspan=2, pady=(16, 0))
+    ttk.Label(main_frame, text="Modelo: Random Forest", style="Info.TLabel").pack(pady=(8, 0))
 
 
 def criar_tab_eda(parent, df):
@@ -340,6 +474,6 @@ def criar_tab_importancia(parent, importancia_df):
 
 if __name__ == "__main__":
     df = carregar_dados()
-    encoder, modelo, resultados, importancia_df, _ = preparar_modelos(df)
-    app = criar_interface(df, modelo, encoder, resultados, importancia_df)
+    encoder, modelo, resultados, importancia_df, _, valores_ideais, importancias_por_variavel = preparar_modelos(df)
+    app = criar_interface(df, modelo, encoder, resultados, importancia_df, valores_ideais, importancias_por_variavel)
     app.mainloop()
