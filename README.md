@@ -8,7 +8,7 @@ Projeto desenvolvido para a disciplina de **IA para Mineração de Dados**, com 
 
 Desenvolver e comparar algoritmos de Machine Learning capazes de recomendar culturas agrícolas utilizando informações do solo e do ambiente.
 
-Além da comparação dos modelos, foi desenvolvido um sistema interativo onde o usuário informa as condições da propriedade rural e recebe uma recomendação automática da cultura mais adequada.
+Além da comparação dos modelos e da análise de importância dos parâmetros, foi desenvolvido um sistema interativo onde o usuário informa as condições da propriedade rural e recebe uma recomendação automática da cultura mais adequada.
 
 ---
 
@@ -22,13 +22,13 @@ O conjunto de dados contém informações agronômicas utilizadas para determina
 
 ### Variáveis utilizadas
 
-- Nitrogênio (N)
-- Fósforo (P)
-- Potássio (K)
-- Temperatura
-- Umidade
+- Nitrogênio (N) — kg/ha
+- Fósforo (P) — kg/ha
+- Potássio (K) — kg/ha
+- Temperatura — °C
+- Umidade — %
 - pH
-- Chuva (Rainfall)
+- Chuva — mm
 
 ### Variável alvo
 
@@ -120,26 +120,33 @@ Principais fatores:
 
 ## 💻 Sistema de Recomendação
 
-Foi desenvolvido um sistema onde o usuário informa as características do solo e condições ambientais.
+Foi desenvolvido um sistema interativo em uma única aplicação, com as seguintes abas:
+
+- **Recomendação** — informe as condições do solo e do clima e receba o ranking das culturas mais adequadas
+- **Análise Exploratória** — estatísticas descritivas e visualizações do dataset
+- **Comparação de Modelos** — métricas e gráfico de desempenho dos algoritmos
+- **Importância dos Parâmetros** — variáveis que mais influenciam a decisão do modelo
 
 ### Exemplo de utilização
 
 Entrada:
 
 ```text
-Nitrogênio (N): 90
-Fósforo (P): 42
-Potássio (K): 43
-Temperatura: 21
-Umidade: 82
+Nitrogênio (N, kg/ha): 90
+Fósforo (P, kg/ha): 42
+Potássio (K, kg/ha): 43
+Temperatura (°C): 21
+Umidade (%): 82
 pH: 6.5
-Chuva: 203
+Chuva (mm): 203
 ```
 
 Saída:
 
 ```text
-Cultura recomendada: Rice
+1. RICE (98.2%)
+2. JUTE (1.1%)
+3. COCONUT (0.4%)
 ```
 
 ### Exemplo do Sistema
@@ -154,17 +161,15 @@ Cultura recomendada: Rice
 recomendacao_de_culturas_com_machine_learning/
 
 ├── Crop_recommendation.csv
-├── comparacao_modelos.py
-├── importancia_random_forest.py
 ├── recomendador_cultura.py
 ├── requirements.txt
 ├── README.md
 │
 └── images/
-    ├── analise_exploratoria.png
-    ├── comparacao_modelos.png
-    ├── importancia_variaveis.png
-    └── resultado_recomendacao.png
+    ├── print_analise_exploratoria.png
+    ├── print_modelos.png
+    ├── print_parametros.png
+    └── print_recomendacao.png
 ```
 
 ---
@@ -183,23 +188,13 @@ git clone https://github.com/RicardoColli/recomendacao_de_culturas_com_machine_l
 pip install -r requirements.txt
 ```
 
-### 3. Executar a comparação de modelos
-
-```bash
-python comparacao_modelos.py
-```
-
-### 4. Executar análise de importância das variáveis
-
-```bash
-python importancia_random_forest.py
-```
-
-### 5. Executar o sistema de recomendação
+### 3. Executar o sistema
 
 ```bash
 python recomendador_cultura.py
 ```
+
+A aplicação abre a interface gráfica com todas as funcionalidades do projeto: recomendação, análise exploratória, comparação de modelos e importância dos parâmetros.
 
 ---
 
