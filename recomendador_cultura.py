@@ -351,7 +351,7 @@ def criar_tab_recomendacao(parent, modelo, encoder, valores_ideais, importancias
             ranking = prever_cultura(modelo, encoder, vetor)
             
             # Formatar resultado com ranking
-            resultado_texto = "🌱 RANKING DE CULTURAS RECOMENDADAS:\n\n"
+            resultado_texto = "RANKING DE CULTURAS RECOMENDADAS:\n\n"
             for idx, (cultura, prob) in enumerate(ranking, 1):
                 percentual = prob * 100
                 resultado_texto += f"{idx}. {cultura.upper()} ({percentual:.1f}%)\n"
@@ -360,7 +360,7 @@ def criar_tab_recomendacao(parent, modelo, encoder, valores_ideais, importancias
             cultura_top = ranking[0][0]
             valores_ideais_cultura = valores_ideais[cultura_top]
             
-            resultado_texto += f"\n📊 VALORES IDEAIS PARA {cultura_top.upper()}:\n"
+            resultado_texto += f"\nVALORES IDEAIS PARA {cultura_top.upper()}:\n"
             resultado_texto += f"  • Nitrogênio: {valores_ideais_cultura['N']:.1f} kg/ha\n"
             resultado_texto += f"  • Fósforo: {valores_ideais_cultura['P']:.1f} kg/ha\n"
             resultado_texto += f"  • Potássio: {valores_ideais_cultura['K']:.1f} kg/ha\n"
@@ -370,7 +370,7 @@ def criar_tab_recomendacao(parent, modelo, encoder, valores_ideais, importancias
             resultado_texto += f"  • Chuva: {valores_ideais_cultura['rainfall']:.1f} mm\n"
             
             # Adicionar explicação
-            resultado_texto += f"\n💡 POR QUÊ?\n"
+            resultado_texto += f"\nPOR QUÊ? (Em teste)\n"
             resultado_texto += gerar_explicacao(cultura_top, valores)
             
             scrolled.configure(state="normal")
