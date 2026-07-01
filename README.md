@@ -162,8 +162,11 @@ recomendacao_de_culturas_com_machine_learning/
 
 ├── Crop_recommendation.csv
 ├── recomendador_cultura.py
+├── interface.py
+├── modelos.py
 ├── requirements.txt
 ├── README.md
+├── BACKEND.md
 │
 └── images/
     ├── print_analise_exploratoria.png
