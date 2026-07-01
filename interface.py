@@ -37,7 +37,7 @@ def criar_grafico_comparacao(fig, resultados):
     accuracies = [resultados[n]["accuracy"] for n in nomes]
     colors = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2"]
     ax.bar(nomes, accuracies, color=colors)
-    ax.set_title("Comparação de Accuracy entre Modelos")
+    
     ax.set_ylabel("Accuracy")
     ax.set_ylim(0, 1)
     for i, v in enumerate(accuracies):
