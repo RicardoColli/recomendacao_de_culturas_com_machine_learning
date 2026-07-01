@@ -121,8 +121,8 @@ def criar_stats_text(df):
     for col in stats.index:
         linha = stats.loc[col]
         texto.append(
-            f"{col}: média={linha['mean']:.2f}, std={linha['std']:.2f}, min={linha['min']:.2f}, "
-            f"25%={linha['25%']:.2f}, 50%={linha['50%']:.2f}, 75%={linha['75%']:.2f}, max={linha['max']:.2f}"
+            f"{col}: média={linha['mean']:.2f}, desvio padrão={linha['std']:.2f}, "
+            f"mínimo={linha['min']:.2f}, máximo={linha['max']:.2f}"
         )
 
     texto.append("\n=== Distribuição de Culturas ===")
